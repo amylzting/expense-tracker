@@ -1,7 +1,8 @@
 import cors from 'cors';
 import express, { type Request, type Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import { CreateExpenseSchema, UpdateExpenseSchema, type Expense } from './schemas.js';
+import { CreateExpenseSchema, UpdateExpenseSchema } from './schemas.js';
+import type { Expense } from '@expense-tracker/shared';
 
 const app = express()
 
