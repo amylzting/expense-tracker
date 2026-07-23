@@ -1,90 +1,45 @@
-import { useState } from "react";
-import axios from "axios";
-import api from "../api";
+import {
+  CreateExpenseSchema,
+  type CreateExpenseInput,
+} from "@expense-tracker/shared";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-export default function ExpenseForm() {
-  // Benefits for using useState here
-  // 1. Live validation of user input
-  // 2. Can clear the form after submit
-  const [description, setDescription] = useState("");
-  const [amount, setAmount] = useState("");
-  const today = new Date().toISOString().split("T")[0];
-  const [date, setDate] = useState(today);
-  const [category, setCategory] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("");
+interface ExpenseFormProps {
+  onSubmit: (data: CreateExpenseInput) => void;
+  isLoading: boolean;
+}
 
-  const [isLoading, setIsLoading] = useState(false);
-
-  async function handleSubmit(e: React.SubmitEvent) {
-    e.preventDefault();
-    const parsedAmount = parseFloat(parseFloat(amount).toFixed(2));
-    console.log({
-      description,
-      amount: parsedAmount,
-      category,
-      date,
-      paymentMethod,
-    });
-
-    setIsLoading(true);
-
-    try {
-      await api.post("/expenses", {
-        description,
-        amount: parsedAmount,
-        category,
-        date,
-        paymentMethod,
-      });
-
-      // Clear the form after submit
-      setDescription("");
-      setAmount("");
-      setDate("");
-      setCategory("");
-      setPaymentMethod("");
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        console.error("Validation errors:", error.response?.data);
-      } else {
-        console.error("Unknown error:", error);
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  }
+export default function ExpenseForm({ onSubmit, isLoading }: ExpenseFormProps) {
+  const { register, handleSubmit } = useForm({
+    resolver: zodResolver(CreateExpenseSchema),
+    defaultValues: {
+      date: new Date().toISOString().split("T")[0],
+    },
+  });
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit((data) => onSubmit(data))}>
       <input
         type="text"
         placeholder="Short description"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-      ></input>
+        {...register("description")}
+      />
       <input
         type="number"
         step="0.01"
         placeholder="Amount"
-        value={amount}
-        onChange={(e) => setAmount(e.target.value)}
-      ></input>
-      <input
-        type="date"
-        value={date}
-        onChange={(e) => setDate(e.target.value)}
-      ></input>
-      <select value={category} onChange={(e) => setCategory(e.target.value)}>
+        {...register("amount", { valueAsNumber: true })}
+      />
+      <input type="date" {...register("date")} />
+      <select {...register("category")}>
         <option value="">Select category</option>
         <option value="Food">Food</option>
         <option value="Transport">Transport</option>
         <option value="Shopping">Shopping</option>
         <option value="Travel">Travel</option>
       </select>
-      <select
-        value={paymentMethod}
-        onChange={(e) => setPaymentMethod(e.target.value)}
-      >
+      <select {...register("paymentMethod")}>
         <option value="">Select payment method</option>
         <option value="Cash">Cash</option>
         <option value="Credit Card">Credit Card</option>
@@ -97,3 +52,4 @@ export default function ExpenseForm() {
     </form>
   );
 }
+
